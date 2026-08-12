@@ -56,11 +56,6 @@ jobs:
       - name: Pull latest games + refresh RAPM
         run: python3 scripts/update_from_wehoop.py
 
-      - name: Refresh DRE (career-decay estimator)
-        run: |
-          python3 scripts/dre/build_wnba_dre.py || true
-          python3 scripts/dre/apply_dre.py --season "$(date -u +%Y)" || true
-
       - name: Save possession-data cache for tomorrow
         uses: actions/cache/save@v4
         with:
@@ -81,7 +76,7 @@ jobs:
         run: |
           git config user.name "wnba-rapm-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/wnba_rapm_dashboard_v6*.csv data/td_rapm/*.csv data/dre/wnba_dre*.csv data/wnba_player_names.csv data/wnba_team_names.csv site/data/*.json
+          git add data/wnba_rapm_dashboard_v6*.csv data/wnba_rapm_results_v6.csv data/td_rapm/*.csv data/wnba_player_names.csv data/wnba_team_names.csv site/data/*.json
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
