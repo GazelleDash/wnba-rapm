@@ -35,6 +35,7 @@ Usage
 from __future__ import annotations
 
 import argparse
+import datetime
 import io
 import re
 import sys
@@ -47,6 +48,7 @@ import requests
 
 sys.path.insert(0, str(Path(__file__).parent))
 from wnba_pbp_parser import parse_game
+from fetch_espn_live import fetch_range
 
 WEHOOP_URL = (
     "https://github.com/sportsdataverse/wehoop-wnba-data/raw/main/"
@@ -324,12 +326,44 @@ def main() -> None:
     ap.add_argument("--names",   type=Path, default=DEFAULT_NAMES)
     ap.add_argument("--teams",   type=Path, default=DEFAULT_TEAMS)
     ap.add_argument("--dry-run", action="store_true", dest="dry_run")
+    ap.add_argument("--no-gapfill", action="store_true", dest="no_gapfill",
+                    help="Skip the ESPN live-API gap-fill; use only the wehoop parquet")
     args = ap.parse_args()
 
     print(f"Downloading ESPN {args.season} PBP …")
     url = WEHOOP_URL.format(season=args.season)
     pbp = pd.read_parquet(io.BytesIO(fetch_bytes(url)))
-    print(f"  {len(pbp):,} plays, {pbp['game_id'].nunique()} games")
+    print(f"  {len(pbp):,} plays, {pbp['game_id'].nunique()} games "
+          f"(through {pd.to_datetime(pbp['game_date']).max().date()})")
+
+    # ── gap-fill from ESPN's live API ─────────────────────────────────────────
+    # The wehoop parquet is built from sportsdataverse/wehoop-wnba-raw, and when
+    # that raw ingestion stalls the parquet silently freezes — it keeps
+    # rebuilding daily and reporting success, just from a stale game list (this
+    # happened for 10+ days after 2026-08-01). Pull anything newer straight from
+    # ESPN so a broken upstream degrades into "slightly slower" rather than
+    # "silently months out of date".
+    if not args.no_gapfill:
+        last = pd.to_datetime(pbp["game_date"]).max().date()
+        today = datetime.datetime.utcnow().date()
+        if last < today:
+            print(f"Checking ESPN directly for games after {last} …")
+            try:
+                gap = fetch_range(last + datetime.timedelta(days=1), today)
+                if not gap.empty:
+                    have = set(pbp["game_id"].astype(int))
+                    gap = gap[~gap["game_id"].astype(int).isin(have)]
+                if not gap.empty:
+                    pbp = pd.concat([pbp, gap], ignore_index=True)
+                    print(f"  + {gap['game_id'].nunique()} game(s) from ESPN "
+                          f"→ {len(pbp):,} plays total "
+                          f"(now through {pd.to_datetime(pbp['game_date']).max().date()})")
+                else:
+                    print("  ESPN has nothing newer")
+            except Exception as e:                   # noqa: BLE001
+                # Never let the gap-filler break the main path — worst case we
+                # fall back to exactly the wehoop-only behavior.
+                print(f"  ESPN gap-fill skipped ({type(e).__name__}: {e})")
 
     names_df = pd.read_csv(args.names)
     teams_df = pd.read_csv(args.teams)
