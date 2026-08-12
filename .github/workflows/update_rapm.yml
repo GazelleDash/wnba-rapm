@@ -53,10 +53,12 @@ jobs:
         if: steps.cache.outputs.cache-hit != 'true'
         run: python3 scripts/wnba_pbp_parser.py --all
 
-      - name: Pull latest games + refresh RAPM
-        run: python3 scripts/update_from_wehoop.py
-
+      # Saved immediately after the (possibly 1-2h) historical build, rather
+      # than after the rest of the job — so a downstream failure never throws
+      # away an otherwise-successful expensive build and forces next run to
+      # redo it from scratch.
       - name: Save possession-data cache for tomorrow
+        if: steps.cache.outputs.cache-hit != 'true'
         uses: actions/cache/save@v4
         with:
           path: |
@@ -66,6 +68,9 @@ jobs:
             data/wnba_player_names.csv
             data/wnba_team_names.csv
           key: wnba-poss-${{ github.run_id }}
+
+      - name: Pull latest games + refresh RAPM
+        run: python3 scripts/update_from_wehoop.py
 
       # Turn the refreshed CSVs into the compact JSON the static site reads
       # (site/data/players.json, td.json, dre.json, meta.json).

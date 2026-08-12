@@ -35,8 +35,10 @@ from __future__ import annotations
 import argparse
 import io
 import tarfile
+import time
 from collections import defaultdict
 from pathlib import Path
+from urllib.error import URLError
 from urllib.request import Request, urlopen
 
 import pandas as pd
@@ -52,9 +54,31 @@ _LINEUP_SKIP = frozenset({                   # don't infer starter from these
 
 # ── Data loading ──────────────────────────────────────────────────────────────
 
+def _urlopen_retry(req_or_url, attempts: int = 5, timeout: int = 120) -> bytes:
+    """urlopen(...).read() with retry/backoff.
+
+    GitHub's raw-content CDN intermittently drops the connection mid-transfer
+    (RemoteDisconnected). A bare urlopen() then kills the whole run — during a
+    17-season historical build that issues dozens of requests, hitting this at
+    least once is closer to the norm than the exception.
+    """
+    last: Exception | None = None
+    for i in range(attempts):
+        try:
+            with urlopen(req_or_url, timeout=timeout) as r:
+                return r.read()
+        except (URLError, OSError, TimeoutError) as e:
+            last = e
+            if i < attempts - 1:
+                wait = 2 ** i
+                print(f"    fetch failed ({type(e).__name__}); "
+                      f"retry {i + 1}/{attempts - 1} in {wait}s", flush=True)
+                time.sleep(wait)
+    raise RuntimeError(f"failed to fetch after {attempts} attempts: {last}")
+
+
 def _fetch_list() -> dict[str, str]:
-    with urlopen(LIST_DATA_URL) as f:
-        lines = f.read().decode("utf-8").strip().split("\n")
+    lines = _urlopen_retry(LIST_DATA_URL).decode("utf-8").strip().split("\n")
     return {ln.split("=")[0]: ln.split("=")[1] for ln in lines if "=" in ln}
 
 
@@ -64,8 +88,7 @@ def _download_tar_csv(key: str, lookup: dict[str, str]) -> pd.DataFrame:
     url = lookup[key]
     print(f"  Downloading {key} ...")
     req = Request(url, headers={"User-Agent": "Mozilla/5.0"})
-    with urlopen(req) as r:
-        content = r.read()
+    content = _urlopen_retry(req)
     with tarfile.open(fileobj=io.BytesIO(content), mode="r:xz") as tar:
         csv_file = tar.extractfile(f"{key}.csv")
         return pd.read_csv(csv_file)
