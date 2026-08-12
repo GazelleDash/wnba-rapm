@@ -16,7 +16,6 @@ import streamlit as st
 
 DASH_V6  = Path("data/wnba_rapm_dashboard_v6.csv")
 TD_RAPM  = Path("data/td_rapm/wnba_rapm_td.csv")
-DRE_DIR  = Path("data/dre")
 
 st.set_page_config(page_title="WNBA RAPM", page_icon="🏀", layout="wide")
 
@@ -29,12 +28,6 @@ def load_windowed() -> pd.DataFrame | None:
 @st.cache_data(ttl=3600)
 def load_td() -> pd.DataFrame | None:
     return pd.read_csv(TD_RAPM) if TD_RAPM.exists() else None
-
-
-@st.cache_data(ttl=3600)
-def load_dre() -> pd.DataFrame | None:
-    files = sorted(DRE_DIR.glob("wnba_dre_season_*.csv"), reverse=True)
-    return pd.read_csv(files[0]) if files else None
 
 
 def last_updated() -> str:
@@ -50,8 +43,8 @@ st.caption(
     f"auto-updated daily · last refresh **{last_updated()}**"
 )
 
-tab_windowed, tab_decay, tab_dre, tab_about = st.tabs(
-    ["Windowed RAPM", "Career-Decay (live)", "DRE (box-score estimate)", "About"]
+tab_windowed, tab_decay, tab_about = st.tabs(
+    ["Windowed RAPM", "Career-Decay (live)", "About"]
 )
 
 # ── Windowed RAPM ────────────────────────────────────────────────────────────
@@ -61,10 +54,12 @@ with tab_windowed:
         st.info("No data yet — the daily pipeline hasn't run. Check back after "
                  "the next scheduled update, or trigger it from the Actions tab.")
     else:
+        years = sorted(df["end_year"].unique(), reverse=True)
+        default_year_idx = years.index(2026) if 2026 in years else 0
+
         c1, c2, c3 = st.columns([1, 1, 2])
         with c1:
-            end_year = st.selectbox(
-                "Season", sorted(df["end_year"].unique(), reverse=True))
+            end_year = st.selectbox("Season", years, index=default_year_idx)
         with c2:
             window = st.selectbox(
                 "Window", sorted(df["rapm_length"].unique()), index=0,
@@ -79,15 +74,15 @@ with tab_windowed:
         sub = sub[sub["total_poss"] >= min_poss].sort_values("rapm", ascending=False)
 
         st.dataframe(
-            sub[["name", "team", "total_poss", "orapm", "drapm", "rapm",
+            sub[["name", "team", "total_poss", "rapm", "orapm", "drapm",
                  "off_ts_val", "off_tov_val", "off_reb_val",
                  "def_ts_val", "def_tov_val", "def_reb_val"]],
             column_config={
                 "name": "Player", "team": "Team",
                 "total_poss": st.column_config.NumberColumn("Poss", format="%.0f"),
+                "rapm": st.column_config.NumberColumn("RAPM", format="%.2f"),
                 "orapm": st.column_config.NumberColumn("ORAPM", format="%.2f"),
                 "drapm": st.column_config.NumberColumn("DRAPM", format="%.2f"),
-                "rapm": st.column_config.NumberColumn("RAPM", format="%.2f"),
                 "off_ts_val": st.column_config.NumberColumn("oTS", format="%.2f"),
                 "off_tov_val": st.column_config.NumberColumn("oTOV", format="%.2f"),
                 "off_reb_val": st.column_config.NumberColumn("oREB", format="%.2f"),
@@ -117,47 +112,16 @@ with tab_decay:
             "Minimum possessions ", 0, 3000, 300, step=50, key="td_min_poss")
         sub = td[td["total_poss"] >= min_poss_td].sort_values("RAPM", ascending=False)
         st.dataframe(
-            sub[["name", "team", "total_poss", "ORAPM", "DRAPM", "RAPM"]],
+            sub[["name", "team", "total_poss", "RAPM", "ORAPM", "DRAPM"]],
             column_config={
                 "name": "Player", "team": "Team",
                 "total_poss": st.column_config.NumberColumn(
                     "Eff. Poss", format="%.0f",
                     help="Decay-weighted — recent possessions count near full, "
                          "old ones fade, so this is lower than a raw career total."),
+                "RAPM": st.column_config.NumberColumn(format="%.2f"),
                 "ORAPM": st.column_config.NumberColumn(format="%.2f"),
                 "DRAPM": st.column_config.NumberColumn(format="%.2f"),
-                "RAPM": st.column_config.NumberColumn(format="%.2f"),
-            },
-            hide_index=True, use_container_width=True, height=560,
-        )
-
-# ── DRE ───────────────────────────────────────────────────────────────────────
-with tab_dre:
-    dre = load_dre()
-    if dre is None:
-        st.info("No DRE data yet.")
-    else:
-        st.caption(
-            "Daily RAPM Estimate — a box-score linear-weights formula fit "
-            "against RAPM (Ferrigan / Nylon Calculus method). Works for "
-            "players without enough minutes for a RAPM estimate. Explains "
-            "roughly a third of RAPM's variance — a fast estimate, not a "
-            "substitute."
-        )
-        min_poss_dre = st.slider(
-            "Minimum possessions  ", 0, 3000, 300, step=50, key="dre_min_poss")
-        sub = dre[dre["poss"] >= min_poss_dre].sort_values("dre", ascending=False)
-        st.dataframe(
-            sub[["name", "team", "poss", "dre", "dre_rapm_scale"]],
-            column_config={
-                "name": "Player", "team": "Team",
-                "poss": st.column_config.NumberColumn(format="%.0f"),
-                "dre": st.column_config.NumberColumn(
-                    "DRE", format="%.2f",
-                    help="Ferrigan's PTS=1 scale — a Game-Score-style bulk number."),
-                "dre_rapm_scale": st.column_config.NumberColumn(
-                    "DRE (RAPM scale)", format="%.2f",
-                    help="Directly comparable to actual RAPM."),
             },
             hide_index=True, use_container_width=True, height=560,
         )
