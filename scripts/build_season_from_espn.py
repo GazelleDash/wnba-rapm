@@ -38,6 +38,7 @@ import argparse
 import io
 import re
 import sys
+import time
 import unicodedata
 from pathlib import Path
 
@@ -79,6 +80,37 @@ EXPANSION_TEAMS = {
     "TOR": 1611661332,   # Toronto Tempo
     "POR": 1611661333,   # Portland Fire
 }
+
+
+# ── network ─────────────────────────────────────────────────────────────────────
+
+def fetch_bytes(url: str, attempts: int = 5, timeout: int = 120) -> bytes:
+    """GET with retry/backoff.
+
+    GitHub's file CDN intermittently closes the connection mid-transfer
+    ("RemoteDisconnected"). A bare requests.get() then kills the whole run,
+    including the unattended daily Action. Each attempt uses a fresh session to
+    avoid reusing a poisoned keep-alive socket.
+    """
+    last: Exception | None = None
+    for i in range(attempts):
+        try:
+            with requests.Session() as s:
+                s.headers.update({"User-Agent": "Mozilla/5.0"})
+                r = s.get(url, timeout=timeout)
+                r.raise_for_status()
+                return r.content
+        except Exception as e:  # noqa: BLE001 - retry transient network issues
+            last = e
+            if i < attempts - 1:
+                wait = 2 ** i
+                print(
+                    f"  fetch failed ({type(e).__name__}); "
+                    f"retry {i + 1}/{attempts - 1} in {wait}s",
+                    flush=True,
+                )
+                time.sleep(wait)
+    raise RuntimeError(f"failed to fetch {url} after {attempts} attempts: {last}")
 
 
 # ── name normalization / crosswalk ──────────────────────────────────────────────
@@ -296,7 +328,7 @@ def main() -> None:
 
     print(f"Downloading ESPN {args.season} PBP …")
     url = WEHOOP_URL.format(season=args.season)
-    pbp = pd.read_parquet(io.BytesIO(requests.get(url, timeout=120).content))
+    pbp = pd.read_parquet(io.BytesIO(fetch_bytes(url)))
     print(f"  {len(pbp):,} plays, {pbp['game_id'].nunique()} games")
 
     names_df = pd.read_csv(args.names)
