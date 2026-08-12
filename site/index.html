@@ -15,6 +15,7 @@
     <a href="#view=players" data-view="players" class="active">Players</a>
     <a href="#view=td" data-view="td">Career-Decay</a>
   </nav>
+  <span class="asof" id="asofBadge" title="Most recent game date in the source data — the site updates daily, but the games themselves only exist through this date"></span>
 </header>
 
 <noscript><div class="nojs">This stats explorer needs JavaScript to load and sort the data tables.</div></noscript>
@@ -73,7 +74,8 @@
   <b>Career-Decay</b> weights every possession by an exponential half-life, so recent play counts most.<br>
   Percentile subscripts rank within the currently qualified pool — change the season, window, team or
   minimum-possession filters and the percentiles are recomputed against whoever still qualifies.<br>
-  Data auto-updates daily &nbsp;·&nbsp; Last updated <b id="updated">…</b><br>
+  Data auto-updates daily &nbsp;·&nbsp; Pipeline last ran <b id="updated">…</b>
+  &nbsp;·&nbsp; Games included through <b id="gamesThrough">…</b><br>
   Sources: <a href="https://github.com/shufinskiy/nba_data">shufinskiy/nba_data</a>
   &nbsp;·&nbsp; <a href="https://github.com/sportsdataverse/wehoop-wnba-data">sportsdataverse/wehoop-wnba-data</a>
 </footer>

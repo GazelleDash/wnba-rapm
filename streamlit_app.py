@@ -37,10 +37,22 @@ def last_updated() -> str:
     return "unknown"
 
 
+def games_through() -> str:
+    """Most recent game date actually present in the source data — NOT when
+    the pipeline last ran. The two diverge on days with no new games."""
+    td = load_td()
+    if td is not None and "as_of" in td.columns and len(td):
+        vals = td["as_of"].dropna()
+        if len(vals):
+            d = pd.to_datetime(sorted(vals.unique())[-1])
+            return d.strftime("%b %-d, %Y")
+    return "unknown"
+
+
 st.title("🏀 WNBA RAPM")
 st.caption(
     f"Regularized Adjusted Plus/Minus, 2009–present · six-factor breakdown · "
-    f"auto-updated daily · last refresh **{last_updated()}**"
+    f"**games through {games_through()}** · pipeline last ran {last_updated()}"
 )
 
 tab_windowed, tab_decay, tab_about = st.tabs(

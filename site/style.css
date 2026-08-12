@@ -18,6 +18,12 @@ nav a {
   font-size: 12px; cursor: pointer;
 }
 nav a.active { color: #000; font-weight: bold; text-decoration: none; }
+.asof {
+  margin-left: auto; font-size: 11px; color: #333; background: #fffde7;
+  border: 1px solid #ddd; padding: 2px 8px; border-radius: 2px;
+  white-space: nowrap;
+}
+.asof b { color: #000; }
 
 .nojs {
   padding: 10px; background: #fffde7; border-bottom: 1px solid #999;

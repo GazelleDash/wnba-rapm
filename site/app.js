@@ -502,6 +502,16 @@ async function boot() {
   }
 
   if (DATA.meta?.updated) $("updated").textContent = DATA.meta.updated;
+  if (DATA.meta?.td_as_of) {
+    // td_as_of is the latest game date actually present in the source data —
+    // NOT when the pipeline last ran. The two can (and do) diverge: the site
+    // updates daily even on days with no new games.
+    const d = new Date(DATA.meta.td_as_of + "T00:00:00Z");
+    const pretty = isNaN(d) ? DATA.meta.td_as_of
+      : d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "UTC" });
+    $("gamesThrough").textContent = pretty;
+    $("asofBadge").innerHTML = `Games through <b>${_esc(pretty)}</b>`;
+  }
 
   const seasons = (DATA.meta?.seasons || []).slice().sort((a, b) => b - a);
   $("yearsel").innerHTML = seasons.map(s => `<option value="${s}">${s}</option>`).join("");
