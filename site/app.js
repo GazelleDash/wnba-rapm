@@ -14,7 +14,6 @@ const _esc = s => String(s ?? "").replace(/[&<>"]/g,
 let DATA = { players: null, td: null, meta: null };
 let view = "players";
 let sortKey = null, sortDesc = true;
-let cbSafe = false;
 let filtMode = false;
 let colsOn = new Set();
 let statFilters = {};          // {colKey: {min, max}}
@@ -31,8 +30,8 @@ const DEFS = {
     { k: "name",        l: "Player",  g: "Overview",   txt: 1, cls: "name", noPct: 1 },
     { k: "team",        l: "Team",    g: "Overview",   txt: 1, cls: "team", noPct: 1 },
     { k: "total_poss",  l: "Poss",    g: "Overview",   d: 0,   noPct: 1 },
-    { k: "orapm",       l: "ORAPM",   g: "RAPM",       d: 2, pm: 1 },
     { k: "rapm",        l: "RAPM",    g: "RAPM",       d: 2, pm: 1 },
+    { k: "orapm",       l: "ORAPM",   g: "RAPM",       d: 2, pm: 1 },
     { k: "drapm",       l: "DRAPM",   g: "RAPM",       d: 2, pm: 1 },
     { k: "off_ts_val",  l: "oTS",     g: "Offense",    d: 2, pm: 1 },
     { k: "off_tov_val", l: "oTOV",    g: "Offense",    d: 2, pm: 1 },
@@ -48,8 +47,8 @@ const DEFS = {
     { k: "name",         l: "Player",   g: "Overview", txt: 1, cls: "name", noPct: 1 },
     { k: "team",         l: "Team",     g: "Overview", txt: 1, cls: "team", noPct: 1 },
     { k: "total_poss",   l: "Eff Poss", g: "Overview", d: 0,   noPct: 1 },
-    { k: "ORAPM",        l: "ORAPM",    g: "RAPM",     d: 2, pm: 1 },
     { k: "RAPM",         l: "RAPM",     g: "RAPM",     d: 2, pm: 1 },
+    { k: "ORAPM",        l: "ORAPM",    g: "RAPM",     d: 2, pm: 1 },
     { k: "DRAPM",        l: "DRAPM",    g: "RAPM",     d: 2, pm: 1 },
     { k: "off_ts_pts",   l: "oTS",      g: "Offense",  d: 2, pm: 1 },
     { k: "off_tov_pts",  l: "oTOV",     g: "Offense",  d: 2, pm: 1 },
@@ -104,14 +103,6 @@ function pctlOf(d, v) {
 /* ── heat color (mirrors WBPM heatColor exactly) ─────────────────────── */
 function heatColor(p) {
   if (p == null) return "";
-  if (cbSafe) {
-    if (p < 50) {
-      const t = (50 - p) / 50;
-      return `hsl(215, ${Math.round(8 + 67 * t)}%, ${Math.round(96 - 10 * t)}%)`;
-    }
-    const t = (p - 50) / 50;
-    return `hsl(32, ${Math.round(8 + 77 * t)}%, ${Math.round(96 - 12 * t)}%)`;
-  }
   const dist = Math.abs(p - 50) / 50;
   return `hsl(${Math.round(p * 1.2)}, ${Math.round(45 + 30 * dist)}%, ${Math.round(93 - 6 * dist)}%)`;
 }
@@ -424,7 +415,6 @@ function writeHash() {
   const minp = $("minposs").value;
   if (minp) p.push(`mp=${minp}`);
   if ($("teamsel").value) p.push(`team=${encodeURIComponent($("teamsel").value)}`);
-  if (cbSafe) p.push("cb=1");
   history.replaceState(null, "", "#" + p.join("&"));
 }
 function readHash() {
@@ -517,9 +507,9 @@ async function boot() {
   $("yearsel").innerHTML = seasons.map(s => `<option value="${s}">${s}</option>`).join("");
 
   const h = readHash();
-  if (h.y && seasons.includes(+h.y)) $("yearsel").value = h.y;
-  if (h.w) $("windowsel").value = h.w;
-  if (h.cb === "1") { cbSafe = true; $("cbmode").checked = true; }
+  const defaultYear = seasons.includes(2026) ? "2026" : String(seasons[0] ?? "");
+  $("yearsel").value = (h.y && seasons.includes(+h.y)) ? h.y : defaultYear;
+  $("windowsel").value = h.w || "1";
 
   // wire controls
   $("yearsel").onchange = () => { showAll = false; populateTeams(); writeHash(); render(); };
@@ -527,7 +517,6 @@ async function boot() {
   $("search").oninput = () => { showAll = false; renderBody(); };
   $("minposs").oninput = () => { showAll = false; writeHash(); renderBody(); };
   $("teamsel").onchange = () => { showAll = false; writeHash(); renderBody(); };
-  $("cbmode").onchange = () => { cbSafe = $("cbmode").checked; writeHash(); renderBody(); };
   $("colbtn").onclick = () => {
     const p = $("colpanel"), open = p.classList.toggle("hidden") === false;
     $("colbtn").classList.toggle("on", open);
@@ -546,7 +535,6 @@ async function boot() {
     $("search").value = ""; $("teamsel").value = "";
     statFilters = {}; filtMode = false; showAll = false;
     $("filtbtn").classList.remove("on");
-    cbSafe = false; $("cbmode").checked = false;
     setView(view);
     writeHash();
   };
@@ -558,8 +546,6 @@ async function boot() {
   window.addEventListener("hashchange", () => {
     const hh = readHash();
     applyingHash = true;
-    cbSafe = hh.cb === "1";
-    $("cbmode").checked = cbSafe;
     if (hh.y && $("yearsel").querySelector(`option[value="${hh.y}"]`)) $("yearsel").value = hh.y;
     if (hh.w) $("windowsel").value = hh.w;
     if (hh.view && hh.view !== view) {

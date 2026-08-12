@@ -53,7 +53,6 @@ nav a.active { color: #000; font-weight: bold; text-decoration: none; }
 .grp-links a, .grp-links .linklike { margin-right: 8px; }
 .rst { color: #a00; cursor: pointer; margin-left: auto; text-decoration: underline; }
 .rst.linklike { color: #a00; margin-left: auto; }
-.pctl-toggle { color: #000; cursor: pointer; }
 
 .checkgrid { display: block; }
 .colgroup { display: flex; align-items: flex-start; gap: 10px; padding: 2px 0; }
@@ -148,8 +147,7 @@ footer b { color: #444; }
 /* ── keyboard focus (mouse clicks stay clean via :focus-visible) ─────── */
 nav a:focus-visible, .tbtn:focus-visible, .linklike:focus-visible,
 .controls input:focus-visible, .controls select:focus-visible,
-tr.filtrow input:focus-visible, .colchk input:focus-visible,
-.pctl-toggle input:focus-visible { outline: 2px solid #00e; outline-offset: 1px; }
+tr.filtrow input:focus-visible, .colchk input:focus-visible { outline: 2px solid #00e; outline-offset: 1px; }
 
 /* ── mobile: keep the dense desktop identity, make it operable ───────── */
 @media (max-width: 700px) {
