@@ -1,0 +1,176 @@
+/* Barttorvik-style theme: plain white page, Verdana, dense bordered table,
+   heat-colored stat cells. Ported from the WBPM explorer. */
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: #fff; color: #000;
+  font: 12px/1.3 Verdana, Geneva, Arial, sans-serif;
+}
+a { color: #00e; }
+
+header {
+  display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap;
+  padding: 6px 10px; border-bottom: 3px double #000; background: #fff;
+}
+.brand { font-size: 18px; font-weight: bold; }
+.brand .sub { font-size: 10px; font-weight: normal; color: #555; margin-left: 6px; }
+nav a {
+  color: #00e; text-decoration: underline; margin-right: 8px;
+  font-size: 12px; cursor: pointer;
+}
+nav a.active { color: #000; font-weight: bold; text-decoration: none; }
+
+.nojs {
+  padding: 10px; background: #fffde7; border-bottom: 1px solid #999;
+  font-size: 11px;
+}
+
+.controls {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+  padding: 5px 10px; background: #f7f7f7; border-bottom: 1px solid #999;
+  font-size: 11px;
+}
+.controls .cgrp { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.controls .cgrp + .cgrp { border-left: 1px solid #bbb; padding-left: 10px; }
+.controls input[type=text] { width: 190px; padding: 2px 4px; font: inherit; border: 1px solid #999; }
+.controls input[type=number] { width: 62px; padding: 2px 3px; font: inherit; border: 1px solid #999; }
+.controls label { color: #000; }
+.controls select { font: inherit; padding: 1px; border: 1px solid #999; background: #fff; }
+.tbtn {
+  font: inherit; font-size: 11px; padding: 2px 8px; cursor: pointer;
+  background: #eee; border: 1px solid #999; border-radius: 0;
+}
+.tbtn:hover { background: #ddd; }
+.tbtn.on { background: #ffff99; border-color: #666; }
+
+.panel { padding: 6px 10px; background: #fffff0; border-bottom: 1px solid #999; }
+.panel.hidden { display: none; }
+.panel-head { display: flex; align-items: center; gap: 14px; margin-bottom: 6px; font-size: 11px; }
+.panel-head b { letter-spacing: 0.5px; }
+.linklike {
+  background: none; border: 0; padding: 0; font: inherit;
+  color: #00e; text-decoration: underline; cursor: pointer;
+}
+.grp-links a, .grp-links .linklike { margin-right: 8px; }
+.rst { color: #a00; cursor: pointer; margin-left: auto; text-decoration: underline; }
+.rst.linklike { color: #a00; margin-left: auto; }
+.pctl-toggle { color: #000; cursor: pointer; }
+
+.checkgrid { display: block; }
+.colgroup { display: flex; align-items: flex-start; gap: 10px; padding: 2px 0; }
+.colgroup + .colgroup { border-top: 1px dotted #ddd; }
+.colgroup-head {
+  flex: 0 0 90px; text-align: right; font-size: 10px; font-weight: bold;
+  letter-spacing: .5px; text-transform: uppercase; line-height: 1.6;
+}
+.colgroup-body { display: flex; flex-wrap: wrap; gap: 2px 14px; }
+.colchk { font-size: 11px; cursor: pointer; white-space: nowrap; }
+
+/* ≥/≤ filter strip under the column headers */
+tr.filtrow th {
+  background: #fffde7; cursor: default; padding: 2px 3px;
+  position: sticky; top: var(--hdrh, 21px);
+}
+tr.filtrow th:hover { background: #fffde7; }
+tr.filtrow input {
+  width: 40px; padding: 0 2px; font: inherit; font-size: 10px;
+  border: 1px solid #bbb; background: #fff; margin: 0 1px;
+}
+
+.query {
+  padding: 4px 10px; background: #fff; border-bottom: 1px solid #ccc;
+  font: 11px/1.4 Menlo, Consolas, monospace; color: #333;
+  overflow-x: auto; white-space: nowrap;
+}
+.query .prompt { color: #00e; font-weight: bold; }
+.query .fn { color: #708; }
+.query .pipe { color: #00e; }
+.query .tibble { color: #666; font-size: 10px; margin-left: 14px; }
+
+.tablewrap { overflow: auto; padding-bottom: 0; }
+table { border-collapse: separate; border-spacing: 0; margin: 4px auto; white-space: nowrap; }
+thead th {
+  position: sticky; top: 0; background: #dedede; color: #000; cursor: pointer;
+  padding: 3px 5px; font-size: 10px; font-weight: bold; text-align: center;
+  user-select: none; border: solid #999; border-width: 1px 1px 1px 0;
+}
+thead th:first-child { border-left-width: 1px; }
+thead th:hover { background: #ffff99; }
+thead th.sorted { background: #ffff66; }
+thead th .arr { font-size: 8px; margin-left: 2px; vertical-align: 1px; }
+thead th:focus-visible { outline: 2px solid #00e; outline-offset: -2px; }
+tbody td {
+  padding: 1px 5px; text-align: center; font-size: 11px; vertical-align: middle;
+  border: solid #ccc; border-width: 0 1px 1px 0;
+}
+tbody td:first-child { border-left-width: 1px; }
+tbody tr:nth-child(even) td { background-color: var(--heat, #f4f4f4); }
+tbody tr:nth-child(odd) td { background-color: var(--heat, #fff); }
+tbody tr:hover td { outline: 1px solid #f5c400; }
+td.name { text-align: left; font-weight: bold; }
+td.team { text-align: left; }
+td.sorted { font-weight: bold; }
+.cellstack { display: inline-flex; flex-direction: column; align-items: center; line-height: 1.1; }
+.cellstack .v { font-size: 11px; }
+.cellstack .pct { font-size: 9px; color: #333; }
+td.pos .v { color: #006100; }
+td.neg .v { color: #a00000; }
+td.rk { color: #555; font-size: 10px; background: #fff !important; }
+
+/* pinned Rk + Player columns — heat cells scroll beneath; rk/name
+   backgrounds are opaque so they occlude cleanly */
+#stats th.rkcol, #stats td.rk { position: sticky; left: 0; width: 34px; min-width: 34px; max-width: 34px; }
+#stats th.namecol, #stats td.name { position: sticky; left: 34px; background: #fff; }
+#stats tbody td.rk, #stats tbody td.name { z-index: 1; }
+#stats thead th { z-index: 2; }
+#stats thead th.rkcol, #stats thead th.namecol { z-index: 3; }
+
+/* column-group band above the header (Overview | RAPM | Offense | ...) */
+#stats tr.grprow th {
+  position: sticky; top: 0; background: #cfcfcf; font-size: 10px;
+  font-weight: bold; letter-spacing: .5px; cursor: default;
+}
+#stats tr.grprow th:hover { background: #cfcfcf; }
+#stats thead tr:not(.grprow):not(.filtrow) th { top: var(--grph, 0px); }
+
+tr.capnote td { background: #fffde7 !important; text-align: center; font-size: 11px; padding: 3px 5px; }
+tr.capnote a { color: #00e; text-decoration: underline; cursor: pointer; }
+
+.loading, .errbox { padding: 20px 10px; text-align: center; font-size: 12px; }
+.loading { color: #555; }
+.errbox { color: #a00000; }
+
+footer {
+  padding: 10px; color: #666; font-size: 10px; text-align: center;
+  max-width: 900px; margin: 0 auto; line-height: 1.5;
+}
+footer b { color: #444; }
+
+/* ── keyboard focus (mouse clicks stay clean via :focus-visible) ─────── */
+nav a:focus-visible, .tbtn:focus-visible, .linklike:focus-visible,
+.controls input:focus-visible, .controls select:focus-visible,
+tr.filtrow input:focus-visible, .colchk input:focus-visible,
+.pctl-toggle input:focus-visible { outline: 2px solid #00e; outline-offset: 1px; }
+
+/* ── mobile: keep the dense desktop identity, make it operable ───────── */
+@media (max-width: 700px) {
+  .controls { gap: 4px 8px; padding: 4px 6px; }
+  .controls .cgrp + .cgrp { border-left: 0; padding-left: 0; }
+  .controls label { white-space: nowrap; }
+  .controls input[type=text] { width: 130px; }
+  /* 16px inputs are the only reliable way to stop iOS focus-zoom */
+  .controls input[type=text], .controls input[type=number], .controls select { font-size: 16px; }
+  .tbtn { padding: 6px 10px; min-height: 28px; }
+  nav a { display: inline-block; padding: 6px 4px; margin-right: 2px; }
+  tr.filtrow input { width: 52px; padding: 4px 2px; font-size: 16px; }
+  .colgroup { flex-direction: column; gap: 2px; }
+  .colgroup-head { flex-basis: auto; text-align: left; }
+}
+
+/* ── print: the table and its provenance line, nothing else ──────────── */
+@media print {
+  header nav, .controls, .panel, .tbtn, tr.filtrow, footer { display: none !important; }
+  body { font-size: 10px; }
+  .query { border-bottom: 1px solid #000; }
+  .tablewrap { overflow: visible; }
+  thead th { position: static; }
+}

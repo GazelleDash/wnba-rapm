@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WNBA RAPM</title>
+<meta name="description" content="WNBA RAPM — Regularized Adjusted Plus/Minus for the WNBA, 2009–2026. Windowed 1–5 year RAPM with offensive/defensive shooting, turnover and rebounding factors, and career-decay RAPM.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><circle cx='8' cy='8' r='7.5' fill='%23d35400'/><path d='M.5 8h15M8 .5v15M2.8 2.8q5.2 5.2 0 10.4M13.2 2.8q-5.2 5.2 0 10.4' stroke='%23000' fill='none'/></svg>">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <div class="brand">WNBA RAPM <span class="sub">Regularized Adjusted Plus/Minus</span></div>
+  <nav id="viewnav" aria-label="Views">
+    <a href="#view=players" data-view="players" class="active">Players</a>
+    <a href="#view=td" data-view="td">Career-Decay</a>
+  </nav>
+</header>
+
+<noscript><div class="nojs">This stats explorer needs JavaScript to load and sort the data tables.</div></noscript>
+
+<div id="explorer">
+<div class="controls">
+  <span class="cgrp">
+    <label id="yearwrap">Season <select id="yearsel" aria-label="Season"></select></label>
+    <label id="windowwrap" title="RAPM window length in seasons, ending in the selected season">Window <select id="windowsel" aria-label="RAPM window length">
+      <option value="1">1Y</option>
+      <option value="2">2Y</option>
+      <option value="3" selected>3Y</option>
+      <option value="4">4Y</option>
+      <option value="5">5Y</option>
+    </select></label>
+  </span>
+  <span class="cgrp">
+    <input id="search" type="text" placeholder="Search player or team…" autocomplete="off" aria-label="Search player or team">
+  </span>
+  <span class="cgrp">
+    <label id="minposswrap" title="Minimum total possessions to qualify">Min poss <input id="minposs" type="number" value="500" step="100" min="0"></label>
+    <label id="teamwrap">Team <select id="teamsel" aria-label="Team"><option value="">All Teams</option></select></label>
+  </span>
+  <span class="cgrp">
+    <label class="pctl-toggle" id="cbwrap"><input type="checkbox" id="cbmode"> CB-safe colors</label>
+  </span>
+  <span class="cgrp">
+    <button id="colbtn" class="tbtn" title="Show/hide columns" aria-expanded="false" aria-controls="colpanel">▥ Columns</button>
+    <button id="filtbtn" class="tbtn" title="Show ≥/≤ filters under each column header" aria-pressed="false">⧩ Filters</button>
+    <button id="csvbtn" class="tbtn" title="Download the current filtered view as CSV (all rows, visible columns)">⤓ CSV</button>
+    <button id="resetbtn" class="tbtn" title="Reset everything">↺</button>
+  </span>
+</div>
+
+<div id="colpanel" class="panel hidden">
+  <div class="panel-head">
+    <b>SHOW COLUMNS</b>
+    <span class="grp-links" id="grplinks"></span>
+    <button type="button" class="rst linklike" id="colreset">Reset</button>
+  </div>
+  <div id="colchecks" class="checkgrid"></div>
+</div>
+
+<div class="query"><span class="prompt">&gt;</span> <span id="queryline"></span><br>
+  <span class="tibble" id="tibble" aria-live="polite"></span></div>
+
+<div class="tablewrap">
+  <table id="stats">
+    <thead></thead>
+    <tbody></tbody>
+  </table>
+</div>
+</div>
+
+<footer>
+  <b>RAPM</b> = points per 100 possessions vs. league average, ridge-regularized over play-by-play stints.
+  <b>ORAPM</b>/<b>DRAPM</b> split that into offense and defense; the factor columns decompose each side into
+  shooting, turnover and rebounding value.<br>
+  <b>Career-Decay</b> weights every possession by an exponential half-life, so recent play counts most.<br>
+  Percentile subscripts rank within the currently qualified pool — change the season, window, team or
+  minimum-possession filters and the percentiles are recomputed against whoever still qualifies.<br>
+  Data auto-updates daily &nbsp;·&nbsp; Last updated <b id="updated">…</b><br>
+  Sources: <a href="https://github.com/shufinskiy/nba_data">shufinskiy/nba_data</a>
+  &nbsp;·&nbsp; <a href="https://github.com/sportsdataverse/wehoop-wnba-data">sportsdataverse/wehoop-wnba-data</a>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

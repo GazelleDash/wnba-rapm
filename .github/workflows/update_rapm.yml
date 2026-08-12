@@ -7,7 +7,15 @@ on:
   workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab
 
 permissions:
-  contents: write
+  contents: write   # commit the refreshed CSVs / site JSON back to the repo
+  pages: write      # publish the static site to GitHub Pages
+  id-token: write   # OIDC token deploy-pages uses to authenticate
+
+# Only one Pages deployment at a time. cancel-in-progress stays false so a
+# long historical rebuild is never killed halfway through by the next run.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   update:
@@ -64,14 +72,41 @@ jobs:
             data/wnba_team_names.csv
           key: wnba-poss-${{ github.run_id }}
 
+      # Turn the refreshed CSVs into the compact JSON the static site reads
+      # (site/data/players.json, td.json, dre.json, meta.json).
+      - name: Export static site data
+        run: python3 scripts/export_site_data.py
+
       - name: Commit updated RAPM outputs
         run: |
           git config user.name "wnba-rapm-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add data/wnba_rapm_dashboard_v6*.csv data/td_rapm/*.csv data/dre/wnba_dre*.csv data/wnba_player_names.csv data/wnba_team_names.csv
+          git add data/wnba_rapm_dashboard_v6*.csv data/td_rapm/*.csv data/dre/wnba_dre*.csv data/wnba_player_names.csv data/wnba_team_names.csv site/data/*.json
           if git diff --cached --quiet; then
             echo "No changes to commit"
           else
             git commit -m "Auto-update RAPM: $(date -u +'%Y-%m-%d %H:%M UTC')"
             git push
           fi
+
+      # --- Publish the static site in site/ to GitHub Pages -----------------
+      # Requires Pages to be enabled once: Settings > Pages > Source:
+      # "GitHub Actions".
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload site/ as the Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+  deploy:
+    needs: update
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
