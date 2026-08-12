@@ -1,0 +1,77 @@
+name: Update WNBA RAPM
+
+on:
+  schedule:
+    # 09:00 UTC ≈ 4-5am ET — after the previous night's games have posted.
+    - cron: "0 9 * * *"
+  workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 340   # first-ever run does a full historical parse (~1-2h);
+                            # every run after that is a few minutes (cache hit)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - run: pip install -r requirements.txt
+
+      # Possession-level data (data/wnba_possessions_all.csv, ~80MB) is kept
+      # OUT of git — it's rebuilt/refreshed here and cached between runs via
+      # GitHub Actions cache instead. Only the small final outputs (the RAPM
+      # dashboards, TD-RAPM, DRE tables) get committed to the repo, so repo
+      # size and history stay small no matter how long the season runs.
+      - name: Restore cached possession data
+        id: cache
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            data/wnba_possessions_all.csv
+            data/wnba_stints_all.csv
+            data/wnba_game_dates.csv
+            data/wnba_player_names.csv
+            data/wnba_team_names.csv
+          key: wnba-poss-${{ github.run_id }}
+          restore-keys: wnba-poss-
+
+      - name: First-time full historical build (only runs on a cold cache)
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: python3 scripts/wnba_pbp_parser.py --all
+
+      - name: Pull latest games + refresh RAPM
+        run: python3 scripts/update_from_wehoop.py
+
+      - name: Refresh DRE (career-decay estimator)
+        run: |
+          python3 scripts/dre/build_wnba_dre.py || true
+          python3 scripts/dre/apply_dre.py --season "$(date -u +%Y)" || true
+
+      - name: Save possession-data cache for tomorrow
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            data/wnba_possessions_all.csv
+            data/wnba_stints_all.csv
+            data/wnba_game_dates.csv
+            data/wnba_player_names.csv
+            data/wnba_team_names.csv
+          key: wnba-poss-${{ github.run_id }}
+
+      - name: Commit updated RAPM outputs
+        run: |
+          git config user.name "wnba-rapm-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/wnba_rapm_dashboard_v6*.csv data/td_rapm/*.csv data/dre/wnba_dre*.csv data/wnba_player_names.csv data/wnba_team_names.csv
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Auto-update RAPM: $(date -u +'%Y-%m-%d %H:%M UTC')"
+            git push
+          fi

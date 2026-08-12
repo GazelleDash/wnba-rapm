@@ -1,0 +1,31 @@
+WNBA DRE — fit on v6 2Y RAPM, R²=0.3754, n=1,694 player-seasons (poss≥700)
+
+SCALED (PTS=1, DRE convention):
+DRE = 1.000×PTS - 0.841×FG2A - 0.754×FG3A - 0.310×FTA + 0.418×ORB + 0.215×DRB + 0.918×AST + 2.030×STL + 0.713×BLK - 1.318×TOV - 0.363×PF -8.073
+
+  PTS    +1.0000
+  FG2A   -0.8414
+  FG3A   -0.7542
+  FTA    -0.3103
+  ORB    +0.4181
+  DRB    +0.2150
+  AST    +0.9181
+  STL    +2.0295
+  BLK    +0.7135
+  TOV    -1.3184
+  PF     -0.3627
+  intercept -8.0728
+
+RAW (approximates RAPM's own scale directly):
+  PTS    +0.3759
+  FG2A   -0.3162
+  FG3A   -0.2835
+  FTA    -0.1166
+  ORB    +0.1572
+  DRB    +0.0808
+  AST    +0.3451
+  STL    +0.7628
+  BLK    +0.2682
+  TOV    -0.4955
+  PF     -0.1363
+  intercept -3.0342

@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+.DS_Store
+.streamlit/secrets.toml
+
+# Possession-level data is rebuilt/cached by the Action, not committed —
+# keeps repo size small across a full season of daily updates.
+data/wnba_possessions_all.csv
+data/wnba_possessions_*.csv
+data/wnba_stints_all.csv
+data/dre/wnba_box_rates.csv
+data/dre/*_target_comparison.csv
