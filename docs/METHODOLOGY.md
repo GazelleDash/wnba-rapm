@@ -1,7 +1,7 @@
 # WNBA RAPM — Methodology
 
 Regularized Adjusted Plus/Minus for the WNBA, 2009–present, with a six-factor
-decomposition, a career-decay (DARKO-style) variant, and a box-score estimator (DRE).
+decomposition, a career-decay variant, and a box-score estimator (DRE).
 
 ---
 
@@ -105,7 +105,7 @@ prediction (optimum ≈ 2000). Minimum 50 weighted possessions to qualify.
 ## 3. Time Decay
 
 Every possession is weighted by `2^(−days_ago / 700)` relative to a reference date —
-equivalent to DARKO's `β^t` with **β ≈ 0.9990**.
+an exponential decay of the form `β^t`, with **β ≈ 0.9990**.
 
 β was validated empirically (`scripts/td_rapm/optimize_td_rapm_beta.py`): for each test
 year, fit on all prior seasons and predict that season's possessions out-of-sample.
@@ -120,7 +120,7 @@ year, fit on all prior seasons and predict that season's possessions out-of-samp
 | 0.9970 | 231 d | +0.00152 |
 
 Two findings: decay genuinely helps (every decayed β except the most aggressive beats
-no-decay), and the optimum is **far slower than DARKO's NBA values** (β≈0.99, ~69-day
+no-decay), and the optimum is **far slower than a fast NBA-scale decay** (β≈0.99, ~69-day
 half-life). Smaller WNBA samples need more historical pooling. The peak is broad
 (460–1400 d all near-optimal), so the real risk is decaying *too fast*.
 
@@ -181,11 +181,11 @@ TS% is deliberately **excluded** from `poss_val`: turnovers and rebounds determi
 
 ---
 
-## 5. Career-Decay Variant (DARKO-style)
+## 5. Career-Decay Variant
 
 The windowed model uses fixed 1Y–5Y buckets. The career-decay variant
 (`scripts/td_rapm/wnba_rapm_td.py`) instead uses a player's **entire history** with
-decay as the only weighting — no arbitrary cutoff, matching DARKO's design.
+decay as the only weighting — no arbitrary cutoff.
 
 | | Windowed | Career-decay |
 |---|---|---|
@@ -273,7 +273,7 @@ Two scales are emitted: `dre` (PTS=1, Game-Score-style bulk metric) and
 
 ## 7. Caveats
 
-**No box priors.** Pure lineup signal — no DARKO/EPM-style stabilization. Low-minute
+**No box priors.** Pure lineup signal — no box-score-informed stabilization. Low-minute
 players are noisy; treat anyone under ~200 possessions as directional at best.
 
 **RAPM is foundational, not definitive for single seasons.** Prior-enhanced metrics are

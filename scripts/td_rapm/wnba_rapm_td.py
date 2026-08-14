@@ -1,5 +1,5 @@
 """
-Career-decay Time-Decay RAPM (DARKO-style) for the WNBA.
+Career-decay Time-Decay RAPM for the WNBA.
 
 Unlike the windowed v6 (1Y–5Y buckets), this uses a player's ENTIRE history
 (2009–2026) with an exponential time-decay β^days_ago as the only weighting —
@@ -10,7 +10,7 @@ a chosen reference date, daily-updatable.
 
 HALF_LIFE = 700 days (β ≈ 0.9990) is the empirically optimal decay for WNBA,
 confirmed by scripts/optimize_td_rapm_beta.py (peak at ~693 days; far slower
-than DARKO's NBA β≈0.99 because WNBA samples are ~1/6 the size).
+than a fast NBA-scale decay because WNBA samples are ~1/6 the size).
 
 Model (identical to v6):
   • Core: 2N +1/+1 ridge (Jerry Engelmann), target = centered pts/poss × 100.

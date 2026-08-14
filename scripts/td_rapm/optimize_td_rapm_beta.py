@@ -1,7 +1,7 @@
 """
-Optimize the time-decay β for WNBA RAPM, DARKO-style.
+Optimize the time-decay β for WNBA RAPM.
 
-Idea (Kostya Medvedovsky / DARKO):
+Idea:
   Weight every historical possession by β^(days_ago); pick the β that best
   predicts FUTURE results out-of-sample. β∈(0,1); closer to 1 = slower decay.
 
@@ -56,7 +56,7 @@ OUT_CSV    = Path("data/td_rapm/wnba_td_beta_validation.csv")
 WEHOOP_URL = ("https://github.com/sportsdataverse/wehoop-wnba-data/raw/main/"
               "wnba/pbp/parquet/play_by_play_2026.parquet")
 
-# β grid: from fast (DARKO-NBA-ish) to very slow. Includes our current 0.9990.
+# β grid: from a fast NBA-scale decay to very slow. Includes our current 0.9990.
 BETAS = [0.997, 0.998, 0.9985, 0.9990, 0.9993, 0.9995, 0.9997, 1.0]
 LAMBDA = 0.05          # α = LAMBDA * Σw / 2  (gives α≈v6's ~2000 range)
 TEST_YEARS_DEFAULT = [2019, 2020, 2021, 2022, 2023, 2024, 2025]

@@ -1,5 +1,4 @@
-/* Barttorvik-style theme: plain white page, Verdana, dense bordered table,
-   heat-colored stat cells. Ported from the WBPM explorer. */
+/* Plain white page, Verdana, dense bordered table, heat-colored stat cells. */
 * { box-sizing: border-box; }
 body {
   margin: 0; background: #fff; color: #000;

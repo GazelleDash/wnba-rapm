@@ -1,4 +1,4 @@
-/* WNBA RAPM explorer — Barttorvik-style static table.
+/* WNBA RAPM explorer — dense sortable table with percentile shading.
    No framework, no build step. Loads data/*.json and does all sorting,
    filtering, percentile ranking and heat shading in the browser.
 
